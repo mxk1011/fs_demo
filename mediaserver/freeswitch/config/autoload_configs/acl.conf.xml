@@ -1,0 +1,14 @@
+<configuration name="acl.conf" description="Network Lists">
+  <network-lists>
+    <list name="lan" default="deny">
+      <node type="allow" cidr="172.177.56.0/24"/>
+      <node type="allow" cidr="127.0.0.1/24"/>
+    </list>
+
+    <list name="domains" default="deny">
+      <node type="allow" domain="$${domain}"/>
+      <node type="allow" cidr="172.177.56.0/24"/>
+    </list>
+  </network-lists>
+</configuration>
+

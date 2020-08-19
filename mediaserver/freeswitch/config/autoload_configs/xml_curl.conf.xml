@@ -1,0 +1,13 @@
+<configuration name="xml_curl.conf" description="cURL XML Gateway">
+  <bindings>
+    <binding name="directory">
+      <param name="method" value="GET" />
+      <param name="gateway-url" value="$${api_url}/get_directory.php" bindings="directory"/>
+    </binding>
+
+    <binding name="dialplan">
+      <param name="gateway-url" value="$${api_url}/get_dialplan.php" bindings="diaplan"/>
+      <param name="method" value="GET" />
+    </binding>
+  </bindings>
+</configuration>

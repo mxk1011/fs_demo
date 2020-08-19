@@ -1,0 +1,140 @@
+<html>
+<head>
+  <title>JsSIP Demo</title>
+  <style>
+    video {
+      height: 240px;
+      width: 320px;
+      border: 3px solid grey;
+    }
+  </style>
+</head>
+<body>
+<video id="selfView" autoplay></video>
+<video id="remoteView" autoplay></video>
+
+<script src="dist/jssip.js"></script>
+<script>
+  // Fill this
+  var fsServer = '1.2.3.4';
+  var fsDomain = 'example.com';
+  var user = '1000';
+  var pass = 'mypassword';
+
+  var socket = new JsSIP.WebSocketInterface('wss://' + fsServer + ':4443');
+
+  const mediaSource = new MediaSource();
+
+  var selfView = document.getElementById('selfView');
+  var remoteView = document.getElementById('remoteView');
+
+  var userAgent = JsSIP.version;
+
+  console.log('sip:%s@' + fsDomain, user);
+
+  var configuration = {
+    uri: user + '@' + fsServer,
+    password: pass,
+    sockets: [socket],
+    authorizationUser: null,
+    session_timers: false,
+    user_agent: 'My super application'
+  };
+
+  var phone;
+  if (user && pass) {
+    //JsSIP.debug.enable('JsSIP:*');
+    phone = new JsSIP.UA(configuration);
+
+    console.log('start');
+    phone.start();
+
+    phone.on('registrationFailed', function (ev) {
+      alert('Registering on SIP server failed with error: ' + ev.cause);
+      configuration.uri = null;
+      configuration.password = null;
+    });
+
+    phone.on('newRTCSession', function (ev) {
+      var newSession = ev.session;
+
+      if (session) { // hangup any existing call
+        session.terminate();
+      }
+      session = newSession;
+      var completeSession = function () {
+        session = null;
+      };
+
+      session.on('connecting', function () {
+        console.log('CONNECT');
+      });
+      session.on('peerconnection', function (e) {
+        console.log('1accepted');
+      });
+      session.on('ended', completeSession);
+      session.on('failed', completeSession);
+      session.on('accepted', function (e) {
+        console.log('accepted');
+      });
+      session.on('confirmed', function (e) {
+        console.log('CONFIRM STREAM');
+      });
+
+      if (session.direction === 'outgoing') {
+        console.log('Calling...');
+      } else if (session.direction === 'incoming') {
+        session.on('peerconnection', function (e) {
+          console.log('1accepted');
+          add_stream();
+        });
+
+        var options = {
+          'mediaConstraints': {'audio': true, 'video': true},
+          'pcConfig': {
+            'rtcpMuxPolicy': 'require',
+            'iceServers': []
+          },
+        };
+        console.log('Incoming Call');
+        session.answer(options);
+      }
+    });
+
+  }
+
+  var session;
+
+  function callNumber(number) {
+    var options = {
+      'mediaConstraints': {'audio': true, 'video': true},
+      'pcConfig': {
+        'rtcpMuxPolicy': 'require',
+        'iceServers': [{
+          urls: 'turn:my-turnserver.com',
+          username: 'user',
+          credential: 'password'
+        }, {
+          urls: 'stun:stun2.l.google.com:19302'
+        }]
+      },
+    };
+
+    console.log(number.toString());
+    phone.call(number.toString(), options);
+    addStream();
+  }
+
+  function addStream() {
+    session.connection.addEventListener('addstream', function (e) {
+      remoteView.srcObject = (e.stream);
+      selfView.srcObject = (session.connection.getLocalStreams()[0]);
+    });
+  }
+
+</script>
+<p>
+  <a href="javascript:callNumber(999)">Call 999</a>
+</p>
+</body>
+</html>

@@ -1,0 +1,46 @@
+version: '2.1'
+services:
+  freeswitch:
+    container_name: freeswitch
+    image: veefs-1.0
+    build:
+      context: ./freeswitch
+    restart: always
+    tty: true
+    stdin_open: true
+    environment:
+      DEFAULT_PASSWORD: s3cure
+      SOFTTIMER_TIMERFD: 'false'
+      MAINAPI_URL: "${MAINAPI_URL}"
+      EC2: 'false'
+    ports:
+      - "${FREESWITCH_WS_PORT}:7443"
+      - "8021:8021"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ./freeswitch/sounds:/usr/share/freeswitch/sounds:ro
+      - ./cert.pem:/etc/freeswitch/tls/wss.pem:ro
+      - ./videorecordings:/var/videorecordings
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=freeswitch"
+      - "traefik.frontend.rule=Host:${DOMAIN:-sip.example.net}"
+      - "traefik.port=7443"
+      - "traefik.docker.network=host"
+    networks:
+      - streamy
+networks:
+  streamy:
+    driver: "bridge"
+    ipam:
+      config:
+        - subnet: "172.177.31.0/24"
+volumes:
+  nicemysql:
+    driver: "local"
+  niceredis:
+    driver: "local"
+  videorecordings:
+    driver: "local"

@@ -1,0 +1,14 @@
+<include>
+    <gateway name="provider.com">
+    <!--/// account username *required* ///-->
+    <param name="username" value="abc123"/>
+    <param name="password" value="secret-password"/>
+
+    <param name="retry-seconds" value="30"/>
+    <!--Use the callerid of an inbound call in the from field on outbound calls via this gateway -->
+    <param name="caller-id-in-from" value="false"/>
+    <param name="ping" value="25" />
+    <param name="extenstion" value="12"/>
+    <param name="register" value="true" />
+    </gateway>
+</include>
